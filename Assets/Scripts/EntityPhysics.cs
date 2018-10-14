@@ -95,6 +95,8 @@ public class EntityPhysics : MonoBehaviour
 
     void Start()
     {        
+        //This is a minor change!
+
         rb = GetComponent<Rigidbody>();
 
         stateController = GetComponent<StateController>();

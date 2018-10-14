@@ -95,8 +95,6 @@ public class EntityPhysics : MonoBehaviour
 
     void Start()
     {        
-        //This is the alternate branch!!!!!!!!!!!!!!!!!!
-
         rb = GetComponent<Rigidbody>();
 
         stateController = GetComponent<StateController>();

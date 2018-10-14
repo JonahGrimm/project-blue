@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - CombatCamera
+  - Player1Camera
+  - Player2Camera
+  - Player3Camera
+  - Player4Camera
+  - Player1Predictor
+  - Player2Predictor
+  - Enemy
+  - Weight
+  - Environment
+  - CombatEnvironment
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - 
+  - 
+  - PostProcessing
+  - Platform
+  - AscendingJump
+  - Camera
+  - Environment
+  - Predictor
+  - Entity
+  - PredictorAscending
+  - P1 Cam
+  - P2 Cam
+  - P3 Cam
+  - P4 Cam
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0

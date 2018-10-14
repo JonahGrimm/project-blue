@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a632451370cb0024cb8e97f9a1b4e10f, type: 3}
+  m_Name: Default
+  m_EditorClassIdentifier: 
+  m_LandLagFrames: 4
+  m_TurnaroundFrames: 11
+  m_InitialRunFrames: 2
+  m_TurnaroundAngleThreshold: 140
+  m_MinInactiveFramesIoIdle: 12
+  m_JumpSquatFrames: 4
+  m_TurnaroundDeaccelFrames: 6
+  m_JoystickVelocityToRun: 0.3
+  m_MaxJumpHeightExtendFrames: 8
+  m_NumberOfJumpsInAir: 1
+  m_NumberOfWallJumps: 1
+  m_NumberOfAirDodges: 1
+  m_DistanceToWallForWallJump: 1
+  m_WallJumpFrames: 10
+  m_FramesToJumpOfWallJump: 3
+  m_PlatdropFrames: 20
+  m_MinVelocityToFastfall: 7
+  m_TotalDodgeDuration: 40
+  m_DodgeStartupFrames: 8
+  m_DodgeEndLagFrames: 8
+  m_WavedashFrames: 8
+  e_GroundCheckDistance: 0.65
+  e_GroundNormalCheckDistance: 2.5
+  e_WavedashGroundCheckDistance: 1.6
+  e_AirSpeedAccel: 100
+  e_WalkSpeedAccel: 5000
+  e_RunSpeedAccel: 5000
+  e_MaximumWalkSpeed: 5
+  e_MaximumRunSpeed: 12
+  e_MaximumAirSpeed: 10
+  e_MaximumWallJumpSpeed: 18
+  e_RotationStrength: 10
+  e_DragChangeStrength: 5
+  e_MaxSpeedShrinkSpeed: 5
+  e_AngleDiffLerpStrength: 3
+  e_DefaultDrag: 5.5
+  e_AirDrag: 3.5
+  e_CrouchDrag: 2
+  e_AirDodgeDrag: 2
+  e_GroundDodgeDrag: 2
+  e_StickForce: 500
+  e_JumpForce: 470
+  e_AirJumpForce: 26
+  e_WallJumpForce: 19
+  e_FastfallForce: 35
+  e_GroundDodgeForce: 780
+  e_AirDodgeForce: 690
+  e_WavedashForce: 23
+  e_AdditionalGravityForce: 25
+  e_WallJumpVerticalAngle: 2
+  e_CrouchMinSpeedToBeAbleToMove: 8

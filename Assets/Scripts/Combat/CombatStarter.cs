@@ -40,6 +40,10 @@ public class CombatStarter : MonoBehaviour
     Vector3[,] raycastPositionOffsets;
 
     private bool canStartCombat = true;
+    private bool canStopCombat = false;
+    private bool start = false;
+    private bool stop = false;
+    private Vector3 startLocation = Vector3.zero;
 
     public CinemachineVirtualCamera[] personalCams;
 
@@ -54,24 +58,59 @@ public class CombatStarter : MonoBehaviour
 
         SetupOffsets();
 
-        StartCoroutine(StartCombat());
+        //StartCombat();       
+    }
 
-        
+    /// <summary>Call this to put in a request to start combat when possible</summary>
+    public void StartCombat(Vector3 location)
+    {
+        startLocation = location;
+        start = true;
+        stop = false;
+
+        Debug.Log("Starting!");
+
+    }
+
+    /// <summary>Call this to put in a request to stop combat when possible</summary>
+    public void StopCombat()
+    {
+        stop = true;
+        start = false;
     }
 
     private void FixedUpdate()
     {
-        if (Input.GetKeyDown(KeyCode.Space) && canStartCombat)
+        if (start && canStartCombat)
         {
-            StartCoroutine(StartCombat());
-            canStartCombat = false;
+            start = false;
+            StartCoroutine(SetupCombat());
+        }
+
+        if (stop && canStopCombat)
+        {
+            stop = false;
+            StartCoroutine(TeardownCombat());
+        }
+
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            StartCombat(GameObject.Find("Player 1").transform.GetChild(2).position);
+        }
+        if (Input.GetKeyDown(KeyCode.N))
+        {
+            StopCombat();
         }
     }
 
-    /// <summary>Initializes combat</summary>
-    IEnumerator StartCombat()
+    /// <summary>The actual process to get combat setup</summary>
+    private IEnumerator SetupCombat()
     {
         canStartCombat = false;
+        canStopCombat = false;
+
+        transform.position = startLocation;
+
         beforeArenaLocation = transform.position;
         yield return new WaitForSeconds(.1f); //Give objects enough time to trigger OnTriggerEnter()
         bc.enabled = true;
@@ -81,6 +120,8 @@ public class CombatStarter : MonoBehaviour
         CloneAndMoveObjectsToArena();
 
         yield return new WaitForSeconds(.1f);
+
+        //transform.position = combatArenaLocation;
 
         rightObjects = new List<GameObject>();
         allSlicedObjects = new List<GameObject>();
@@ -92,12 +133,11 @@ public class CombatStarter : MonoBehaviour
         //Take a brief pause to give everything a chance to update
         yield return new WaitForSeconds(.1f);
 
-
         foreach (GameObject g in clonedCombatObjects)
         {
             if (g.GetComponent<Rigidbody>())
             {
-                Debug.Log("Found one! " + g.name);
+                //Debug.Log("Found one! " + g.name);
                 rigidbodyObjects.Add(g);
                 Destroy(g.GetComponent<Rigidbody>());
             }
@@ -133,13 +173,20 @@ public class CombatStarter : MonoBehaviour
             o.GetComponent<Rigidbody>().AddExplosionForce(explosStrength, transform.position, explosRad, explosUpForce, ForceMode.Impulse);
         }
 
-        yield return new WaitForSeconds(3f);
+        canStartCombat = false;
+        canStopCombat = true;
 
-        StartCoroutine(EndCombat());
+        //yield return new WaitForSeconds(3f);
+
+        //StartCoroutine(EndCombat());
     }
 
-    IEnumerator EndCombat()
+    /// <summary>The actual process to get combat torn down</summary>
+    private IEnumerator TeardownCombat()
     {
+        canStartCombat = false;
+        canStopCombat = false;
+
         RewindTime();
 
         foreach (GameObject r in rigidbodyObjects)
@@ -192,6 +239,7 @@ public class CombatStarter : MonoBehaviour
         rigidbodyObjects = null;
 
         canStartCombat = true;
+        canStopCombat = false;
     }
 
     /// <summary>Finds objects to send to the combat arena</summary>
@@ -204,7 +252,7 @@ public class CombatStarter : MonoBehaviour
         //TODO gameObject.layer is an INDEX where entityLayer is in binary
         else if (other.gameObject.tag == ULayTags.playerTag || other.gameObject.tag == ULayTags.enemyTag)
         {
-            Debug.Log("Added entity!");
+            //Debug.Log("Added entity!");
             entityObjects.Add(other.gameObject);
         }
     }
@@ -216,8 +264,9 @@ public class CombatStarter : MonoBehaviour
         for (int i = 0; i < combatObjects.Count; i++)
         {
             displacement = combatObjects[i].transform.position - transform.position;
+            Debug.Log(displacement + " " + combatObjects[i].name);
             oldrotation = combatObjects[i].transform.rotation;
-            clonedCombatObjects[i] = Instantiate(combatObjects[i], displacement, oldrotation, transform) as GameObject;
+            clonedCombatObjects[i] = Instantiate(combatObjects[i], displacement + transform.position, oldrotation, transform) as GameObject;
             clonedCombatObjects[i].transform.localScale = combatObjects[i].transform.localScale;
             clonedCombatObjects[i].tag = "CombatEnvironment";
 
@@ -229,7 +278,7 @@ public class CombatStarter : MonoBehaviour
 
         for (int i = 0; i < entityObjects.Count; i++)
         {
-            entityObjects[i].transform.position += combatArenaLocation;
+            entityObjects[i].transform.position += combatArenaLocation /*+ Vector3.up * .5f*/;
         }
 
         //brainOfCamera.enabled = false;

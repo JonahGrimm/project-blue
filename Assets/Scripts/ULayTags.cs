@@ -20,8 +20,8 @@ public static class ULayTags
         entityLayer = LayerMask.GetMask("Entity");
         cuttableLayers = LayerMask.GetMask("Environment");
 
-        Debug.Log("EntityLayer: " + entityLayer);
-        Debug.Log("EnvironmentLayer: " + environmentLayer);
-        Debug.Log("CuttableLayer: " + cuttableLayers);
+        //Debug.Log("EntityLayer: " + entityLayer);
+        //Debug.Log("EnvironmentLayer: " + environmentLayer);
+        //Debug.Log("CuttableLayer: " + cuttableLayers);
     }
 }

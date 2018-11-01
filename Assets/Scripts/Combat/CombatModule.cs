@@ -17,8 +17,8 @@ public class CombatModule : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-            SetAttack(temp);
+        /*if (Input.GetKeyDown(KeyCode.Space))
+            SetAttack(temp);*/
     }
 
     //Assigns an attack to its respective slot

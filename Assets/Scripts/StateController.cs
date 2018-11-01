@@ -89,6 +89,7 @@ public class StateController : MonoBehaviour
     private float temporaryJoystickAngle;
     public bool IsVulnerable = true;
     private AttackType currentAttack;
+    private bool isInCombat = false;
 
     //Local PlayerInput Variables
     private Vector3 playerInputMovementVector;      //Copy of the input movement vector from PlayerInput
@@ -127,6 +128,7 @@ public class StateController : MonoBehaviour
     readonly int a_IsDodging = Animator.StringToHash("IsDodging");
     readonly int a_IsWavedashing = Animator.StringToHash("IsWavedashing");
 
+    //Dictionaries
     public static Dictionary<State, State[]> transitionDictionary = new Dictionary<State, State[]>();
     public static Dictionary<State, State[]> stateCancelDictionary = new Dictionary<State, State[]>();
 

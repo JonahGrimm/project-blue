@@ -90,4 +90,4 @@ MonoBehaviour:
   angularDragOfNewObject: 4
   explosStrength: 95
   explosUpForce: 35
-  brainOfCamera: {fileID: 0}
+  personalCams: []

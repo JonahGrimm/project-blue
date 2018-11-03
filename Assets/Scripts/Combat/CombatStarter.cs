@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using System.Diagnostics;
 
 public class CombatStarter : MonoBehaviour
 {
@@ -47,6 +48,8 @@ public class CombatStarter : MonoBehaviour
 
     public CinemachineVirtualCamera[] personalCams;
 
+    public CinemachineBrain brainOfCamera;
+
     private void Awake()
     {
         bc = GetComponent<BoxCollider>();
@@ -68,7 +71,7 @@ public class CombatStarter : MonoBehaviour
         start = true;
         stop = false;
 
-        Debug.Log("Starting!");
+        //Debug.Log("Starting!");
 
     }
 
@@ -106,6 +109,10 @@ public class CombatStarter : MonoBehaviour
     /// <summary>The actual process to get combat setup</summary>
     private IEnumerator SetupCombat()
     {
+        Stopwatch totalTime = new Stopwatch();
+
+        totalTime.Start();
+
         canStartCombat = false;
         canStopCombat = false;
 
@@ -120,6 +127,8 @@ public class CombatStarter : MonoBehaviour
         CloneAndMoveObjectsToArena();
 
         yield return new WaitForSeconds(.1f);
+
+        brainOfCamera.enabled = true;
 
         //transform.position = combatArenaLocation;
 
@@ -176,6 +185,9 @@ public class CombatStarter : MonoBehaviour
         canStartCombat = false;
         canStopCombat = true;
 
+        totalTime.Stop();
+
+        UnityEngine.Debug.Log("Total time: " + totalTime.Elapsed);
         //yield return new WaitForSeconds(3f);
 
         //StartCoroutine(EndCombat());
@@ -218,16 +230,16 @@ public class CombatStarter : MonoBehaviour
             Destroy(o);
         }
 
-        //brainOfCamera.enabled = false;
+        brainOfCamera.enabled = false;
 
         foreach (GameObject e in entityObjects)
         {
-            e.transform.position -= combatArenaLocation;
+            e.transform.position = beforeArenaLocation + (e.transform.position - transform.position);
         }
 
         yield return new WaitForSeconds(0.1f);
 
-        //brainOfCamera.enabled = true;
+        brainOfCamera.enabled = true;
 
         transform.position = beforeArenaLocation;
 
@@ -252,7 +264,6 @@ public class CombatStarter : MonoBehaviour
         //TODO gameObject.layer is an INDEX where entityLayer is in binary
         else if (other.gameObject.tag == ULayTags.playerTag || other.gameObject.tag == ULayTags.enemyTag)
         {
-            //Debug.Log("Added entity!");
             entityObjects.Add(other.gameObject);
         }
     }
@@ -264,7 +275,6 @@ public class CombatStarter : MonoBehaviour
         for (int i = 0; i < combatObjects.Count; i++)
         {
             displacement = combatObjects[i].transform.position - transform.position;
-            Debug.Log(displacement + " " + combatObjects[i].name);
             oldrotation = combatObjects[i].transform.rotation;
             clonedCombatObjects[i] = Instantiate(combatObjects[i], displacement + transform.position, oldrotation, transform) as GameObject;
             clonedCombatObjects[i].transform.localScale = combatObjects[i].transform.localScale;
@@ -278,10 +288,10 @@ public class CombatStarter : MonoBehaviour
 
         for (int i = 0; i < entityObjects.Count; i++)
         {
-            entityObjects[i].transform.position += combatArenaLocation /*+ Vector3.up * .5f*/;
+            entityObjects[i].transform.position = combatArenaLocation + (entityObjects[i].transform.position - transform.position);
         }
 
-        //brainOfCamera.enabled = false;
+        brainOfCamera.enabled = false;
 
         transform.position = combatArenaLocation;
 
@@ -291,61 +301,135 @@ public class CombatStarter : MonoBehaviour
     /// <summary>Slices all environmental objects</summary>
     private void SliceObjects()
     {
+        //For each cut to the environment (4 total)
         for (int i = 0; i < raycastPositionOffsets.GetLength(0); i++)
         {
+            int tempIteration = i + 1;
+            UnityEngine.Debug.Log("Slice: " + tempIteration + "/4");
+ 
+            Stopwatch timeForCurrentCut = new Stopwatch();
+            timeForCurrentCut.Start();
+
             hits = Physics.BoxCastAll(raycastPositionOffsets[i, 0], new Vector3(0f, heightOfArena * 2f, 1f), raycastPositionOffsets[i, 1], Quaternion.LookRotation(raycastPositionOffsets[i, 1], Vector3.up), raycastOffset * 2f, ULayTags.cuttableLayers);
 
+            //For the current cut, 
+            //for each object the cut hit,
             foreach (RaycastHit hit in hits)
             {
+                UnityEngine.Debug.Log("Getting a list of objects to cut for " + hit.collider.gameObject.name + "...");
+
+                Stopwatch timeForCurrentObject = new Stopwatch();
+                timeForCurrentObject.Start();
+
                 listOfHitPoints.Add(hit.point);
 
                 if (hit.collider.tag == "CombatEnvironment")
                 {
-                    GameObject victim = hit.collider.gameObject;
+                    //For the current cut, 
+                    //for the current object the cut hit, 
+                    //add all children to cut
+                    List<GameObject> victims = new List<GameObject>();
 
-                    GameObject[] pieces = BLINDED_AM_ME.MeshCut.Cut(victim, raycastPositionOffsets[i, 0], -Vector3.Cross(raycastPositionOffsets[i, 1], Vector3.up), capMaterial);
+                    //We first need to check if the primary object has a mesh renderer on it
+                    GameObject parentVictim = hit.collider.gameObject;
+                    if (parentVictim.GetComponent<MeshRenderer>())
+                        victims.Add(parentVictim);
+                    //Destroy(parentVictim.GetComponent<Collider>());
 
-                    for (int j = 0; j < pieces.Length; j++)
+                    //We now need to check if the primary object has children AND if the children have mesh renderers
+                    for (int c = 0; c < parentVictim.transform.childCount; c++)
                     {
-                        Destroy(pieces[j].GetComponent<Collider>());
+                        Transform currentChild = parentVictim.transform.GetChild(c);
 
-                        if (j == 1)
+                        if (currentChild.GetComponent<MeshRenderer>())
                         {
-                            if (pieces[j].GetComponent<Rigidbody>())
+                            victims.Add(currentChild.gameObject);
+                        }
+                        //If a child has a LODGroup attached to it, it's going to have more children as well that will have mesh renderers
+                        if (currentChild.GetComponent<LODGroup>())
+                        {
+                            //Keep the nesting going...
+                            for (int k = 0; k < currentChild.childCount; k++)
                             {
-                                Rigidbody rb = pieces[j].GetComponent<Rigidbody>();
-                                Destroy(rb);
+                                Transform currentChildChild = currentChild.GetChild(k);
 
-                                if (!rigidbodyObjects.Contains(pieces[j]))
-                                    rigidbodyObjects.Add(pieces[j]);
-                            }
-                            else
-                            {
-                                if (!rigidbodyObjects.Contains(pieces[j]))
-                                    rigidbodyObjects.Add(pieces[j]);
+                                if (currentChildChild.GetComponent<MeshRenderer>())
+                                {
+                                    victims.Add(currentChildChild.gameObject);
+                                }
                             }
                         }
-                        else if (j == 0)
-                        {
-                            if (pieces[j].GetComponent<Rigidbody>())
-                            {
-                                Rigidbody rb = pieces[j].GetComponent<Rigidbody>();
-                                Destroy(rb);
-
-                                if (!rigidbodyObjects.Contains(pieces[j]))
-                                    rigidbodyObjects.Add(pieces[j]);
-                            }
-                        }
-
-                        if (!allSlicedObjects.Contains(pieces[j]))
-                            allSlicedObjects.Add(pieces[j]);
-
                     }
 
-                    if (!rightObjects.Contains(pieces[1]))
-                        rightObjects.Add(pieces[1]);
+                    //For the current cut, 
+                    //for the current object the cut hit, 
+                    //for either the object itself or one of its children, 
+                    foreach (GameObject victim in victims)
+                    {
+                        UnityEngine.Debug.Log("Cutting " + victim.name + "...");
+
+                        Stopwatch timeForCurrentVictim = new Stopwatch();
+                        timeForCurrentVictim.Start();
+
+                        //Cut the mesh
+                        GameObject[] pieces = BLINDED_AM_ME.MeshCut.Cut(victim, raycastPositionOffsets[i, 0], -Vector3.Cross(raycastPositionOffsets[i, 1], Vector3.up), capMaterial);
+
+                        //For the current cut, 
+                        //for the current object the cut hit, 
+                        //for either the object itself or one of its children, 
+                        //for both pieces after the mesh cut
+                        for (int j = 0; j < pieces.Length; j++)
+                        {
+                            if (pieces[j].GetComponent<Collider>())
+                            {
+                                //Destroy(pieces[j].GetComponent<Collider>());
+                            }
+
+                            //All right pieces need to have rigidbodies to be able to explode away from the arena
+                            if (j == 1)
+                            {
+                                if (pieces[j].GetComponent<Rigidbody>())
+                                {
+                                    Rigidbody rb = pieces[j].GetComponent<Rigidbody>();
+                                    Destroy(rb);
+                                }
+
+                                if (!rigidbodyObjects.Contains(pieces[j]))
+                                    rigidbodyObjects.Add(pieces[j]);
+                            }
+                            //Left pieces will only need a rigidbody if they have one already
+                            else if (j == 0)
+                            {
+                                if (pieces[j].GetComponent<Rigidbody>())
+                                {
+                                    Rigidbody rb = pieces[j].GetComponent<Rigidbody>();
+                                    Destroy(rb);
+
+                                    if (!rigidbodyObjects.Contains(pieces[j]))
+                                        rigidbodyObjects.Add(pieces[j]);
+                                }
+                            }
+
+                            //Add the current piece to a master pieces game object list
+                            if (!allSlicedObjects.Contains(pieces[j]))
+                                allSlicedObjects.Add(pieces[j]);
+                        }
+
+                        //Add the RIGHT piece to a master RIGHT pieces game object list
+                        if (!rightObjects.Contains(pieces[1]))
+                            rightObjects.Add(pieces[1]);
+
+                        timeForCurrentVictim.Stop();
+                        UnityEngine.Debug.Log("Time for victim " + victim.name + " is " + timeForCurrentVictim.Elapsed);
+                    }                    
                 }
+
+                timeForCurrentObject.Stop();
+                UnityEngine.Debug.Log("Time for object " + hit.collider.name + " is " + timeForCurrentObject.Elapsed);
             }
+
+            timeForCurrentCut.Stop();
+            UnityEngine.Debug.Log("Time for cut " + tempIteration + " is " + timeForCurrentCut.Elapsed);
         }
     }
 

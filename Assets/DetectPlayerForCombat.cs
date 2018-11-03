@@ -13,11 +13,11 @@ public class DetectPlayerForCombat : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("found something!");
+        //Debug.Log("found something!");
 
         if (other.gameObject.tag == ULayTags.playerTag)
         {
-            Debug.Log("Touch! " + other.gameObject.name);
+            //Debug.Log("Touch! " + other.gameObject.name);
             GameObject.Find("CombatStarter").GetComponent<CombatStarter>().StartCombat(other.transform.position);
             sc.enabled = false;
         }

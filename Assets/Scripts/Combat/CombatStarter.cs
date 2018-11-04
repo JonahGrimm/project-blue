@@ -14,7 +14,7 @@ public class CombatStarter : MonoBehaviour
     List<GameObject> allSlicedObjects = new List<GameObject>();
     List<GameObject> rigidbodyObjects = new List<GameObject>();
 
-    List<Vector3> listOfHitPoints = new List<Vector3>();
+    //List<Vector3> listOfHitPoints = new List<Vector3>();
     RaycastHit[] hits;
 
     public delegate void RewindTimebodies();
@@ -25,7 +25,8 @@ public class CombatStarter : MonoBehaviour
     GameObject[] clonedCombatObjects;
     public float widthOfArena = 40f;
     public float heightOfArena = 80f;
-    public float percHeightCorr = .45f;
+    public float flatEdgeBuffer = 2f;   //Determines how far inside an object must be in order for it to be in the combat arena
+    public float percHeightCorr = .45f; //Percent of high up the center should be for the combat starter hitbox trigger
     public Vector3 combatArenaLocation;
     private Vector3 beforeArenaLocation;
     public float raycastOffset = 100f;
@@ -53,7 +54,7 @@ public class CombatStarter : MonoBehaviour
     private void Awake()
     {
         bc = GetComponent<BoxCollider>();
-        bc.size = new Vector3 (widthOfArena * 2f, heightOfArena, widthOfArena * 2f);
+        bc.size = new Vector3 ((widthOfArena * 2f) - flatEdgeBuffer, heightOfArena, (widthOfArena * 2f) - flatEdgeBuffer);
         bc.center = Vector3.up * percHeightCorr * heightOfArena;
         bc.enabled = false;
 
@@ -98,7 +99,7 @@ public class CombatStarter : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            StartCombat(GameObject.Find("Player 1").transform.GetChild(2).position);
+            StartCombat(Vector3.zero);
         }
         if (Input.GetKeyDown(KeyCode.N))
         {
@@ -321,7 +322,7 @@ public class CombatStarter : MonoBehaviour
                 Stopwatch timeForCurrentObject = new Stopwatch();
                 timeForCurrentObject.Start();
 
-                listOfHitPoints.Add(hit.point);
+                //listOfHitPoints.Add(hit.point);
 
                 if (hit.collider.tag == "CombatEnvironment")
                 {
@@ -337,25 +338,28 @@ public class CombatStarter : MonoBehaviour
                     //Destroy(parentVictim.GetComponent<Collider>());
 
                     //We now need to check if the primary object has children AND if the children have mesh renderers
-                    for (int c = 0; c < parentVictim.transform.childCount; c++)
+                    if (parentVictim.transform.childCount > 0)
                     {
-                        Transform currentChild = parentVictim.transform.GetChild(c);
+                        for (int c = 0; c < parentVictim.transform.childCount; c++)
+                        {
+                            Transform currentChild = parentVictim.transform.GetChild(c);
 
-                        if (currentChild.GetComponent<MeshRenderer>())
-                        {
-                            victims.Add(currentChild.gameObject);
-                        }
-                        //If a child has a LODGroup attached to it, it's going to have more children as well that will have mesh renderers
-                        if (currentChild.GetComponent<LODGroup>())
-                        {
-                            //Keep the nesting going...
-                            for (int k = 0; k < currentChild.childCount; k++)
+                            if (currentChild.GetComponent<MeshRenderer>())
                             {
-                                Transform currentChildChild = currentChild.GetChild(k);
-
-                                if (currentChildChild.GetComponent<MeshRenderer>())
+                                victims.Add(currentChild.gameObject);
+                            }
+                            //If a child has a LODGroup attached to it, it's going to have more children as well that will have mesh renderers
+                            if (currentChild.GetComponent<LODGroup>())
+                            {
+                                //Keep the nesting going...
+                                for (int k = 0; k < currentChild.childCount; k++)
                                 {
-                                    victims.Add(currentChildChild.gameObject);
+                                    Transform currentChildChild = currentChild.GetChild(k);
+
+                                    if (currentChildChild.GetComponent<MeshRenderer>())
+                                    {
+                                        victims.Add(currentChildChild.gameObject);
+                                    }
                                 }
                             }
                         }
